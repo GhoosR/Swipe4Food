@@ -94,7 +94,10 @@ export default function RootLayout() {
                   <Stack screenOptions={{ headerShown: false }}>
                     <Stack.Screen name="(auth)" />
                     <Stack.Screen name="(tabs)" />
-                    <Stack.Screen name="restaurant/[id]" />
+                    <Stack.Screen name="restaurant" />
+                    <Stack.Screen name="subscription" />
+                    <Stack.Screen name="user" />
+                    <Stack.Screen name="video" />
                     <Stack.Screen name="+not-found" />
                   </Stack>
                 </LocationProvider>

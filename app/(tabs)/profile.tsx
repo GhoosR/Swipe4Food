@@ -25,12 +25,24 @@ import { supabase } from '@/lib/supabase';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from '@/services/supabaseApi';
 
+interface UserReview {
+  id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  profiles?: {
+    name: string;
+    avatar_url?: string;
+  };
+}
+
 interface Profile {
   id: string;
   email: string;
   name: string;
   avatar_url?: string;
   account_type: 'user' | 'business';
+  notifications_enabled?: boolean;
   created_at: string;
 }
 
@@ -57,7 +69,7 @@ interface Booking {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUserAccountType, refreshUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [favoriteRestaurants, setFavoriteRestaurants] = useState<any[]>([]);
@@ -71,6 +83,8 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [showAvatarOptions, setShowAvatarOptions] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { t } = useLanguage();
@@ -105,6 +119,9 @@ export default function ProfileScreen() {
       if (profileError) throw profileError;
       setProfile(profileData);
       setEditName(profileData.name);
+      
+      // Load notification preference
+      setNotificationsEnabled(profileData.notifications_enabled !== false);
       
       // Fetch user badges
       const badges = await api.getUserBadges(user.id);
@@ -518,6 +535,31 @@ export default function ProfileScreen() {
     );
   };
 
+  const toggleNotifications = async () => {
+    if (!user) return;
+
+    try {
+      const newValue = !notificationsEnabled;
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ notifications_enabled: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setNotificationsEnabled(newValue);
+      setProfile(prev => prev ? { ...prev, notifications_enabled: newValue } : null);
+      
+      Alert.alert(
+        'Notifications Updated',
+        `Notifications are now ${newValue ? 'enabled' : 'disabled'}.`
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update notification settings');
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -740,7 +782,10 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => setShowNotificationSettings(true)}
+          >
             <Settings size={20} color="#4A5568" />
             <View style={styles.menuItemContent}>
               <Text style={styles.menuItemTitle}>{t('profile.settings')}</Text>
@@ -1011,6 +1056,55 @@ export default function ProfileScreen() {
         visible={showLanguageSelector}
         onClose={() => setShowLanguageSelector(false)}
       />
+      
+      {/* Notification Settings Modal */}
+      <Modal
+        visible={showNotificationSettings}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Notification Settings</Text>
+            <TouchableOpacity onPress={() => setShowNotificationSettings(false)}>
+              <X size={24} color="#2D3748" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.modalContent}>
+            <View style={styles.notificationSetting}>
+              <View style={styles.notificationInfo}>
+                <Text style={styles.notificationTitle}>Push Notifications</Text>
+                <Text style={styles.notificationDescription}>
+                  Receive notifications about bookings, reviews, and updates
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.toggle,
+                  notificationsEnabled && styles.toggleActive
+                ]}
+                onPress={toggleNotifications}
+                activeOpacity={0.7}
+              >
+                <View style={[
+                  styles.toggleThumb,
+                  notificationsEnabled && styles.toggleThumbActive
+                ]} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.notificationNote}>
+              <Text style={styles.noteText}>
+                {notificationsEnabled 
+                  ? "You'll receive notifications about important updates and activities."
+                  : "You won't receive push notifications. You can change this anytime."
+                }
+              </Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1497,5 +1591,72 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 120,
+  },
+  notificationSetting: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  notificationInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#2D3748',
+    marginBottom: 4,
+  },
+  notificationDescription: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    color: '#4A5568',
+    lineHeight: 20,
+  },
+  toggle: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  toggleActive: {
+    backgroundColor: '#f29056',
+  },
+  toggleThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  toggleThumbActive: {
+    transform: [{ translateX: 20 }],
+  },
+  notificationNote: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    padding: 16,
+  },
+  noteText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    color: '#4A5568',
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });

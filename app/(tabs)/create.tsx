@@ -18,7 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ArrowLeft, Upload, Store, Check, Play, ExternalLink, Smartphone } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as VideoThumbnails from 'expo-video-thumbnails';
+// import * as VideoThumbnails from 'expo-video-thumbnails'; // Temporarily disabled due to module issues
 import { api } from '@/services/supabaseApi';
 import { useRouter } from 'expo-router';
 
@@ -41,20 +41,62 @@ export default function CreateScreen() {
   // Check if user is a business owner
   const isBusinessUser = user?.account_type === 'business';
   
-  // Generate thumbnail from video
+  // Generate thumbnail from video (temporarily disabled)
   const generateThumbnail = async (videoUri: string) => {
     try {
       console.log('🖼️ Generating thumbnail for video...');
-      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-        time: 1000, // 1 second into the video
-        quality: 0.7,
-      });
-      console.log('✅ Thumbnail generated successfully');
-      setVideoThumbnail(uri);
+      // Temporarily disabled due to expo-video-thumbnails module issues
+      // const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
+      //   time: 1000, // 1 second into the video
+      //   quality: 0.7,
+      // });
+      // console.log('✅ Thumbnail generated successfully');
+      // setVideoThumbnail(uri);
+      console.log('⚠️ Thumbnail generation temporarily disabled');
     } catch (error) {
       console.error('❌ Error generating thumbnail:', error);
       // Don't block the flow if thumbnail fails
     }
+  };
+
+  // Pick custom thumbnail
+  const pickThumbnail = async () => {
+    try {
+      console.log('🖼️ Starting thumbnail picker...');
+      
+      // Check permissions
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'We need access to your media library to select a thumbnail.');
+        return;
+      }
+      
+      console.log('🖼️ Launching thumbnail picker...');
+      
+      // Launch picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9], // Video aspect ratio
+        quality: 0.8,
+      });
+      
+      console.log('🖼️ Thumbnail picker result:', result.canceled, result.assets?.length);
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        console.log('🖼️ Thumbnail selected:', asset.uri);
+        setVideoThumbnail(asset.uri);
+      }
+    } catch (error) {
+      console.error('❌ Error picking thumbnail:', error);
+      Alert.alert('Error', 'Failed to pick thumbnail. Please try again.');
+    }
+  };
+
+  // Remove custom thumbnail
+  const removeThumbnail = () => {
+    setVideoThumbnail(null);
   };
 
   // Pick video from gallery
@@ -78,7 +120,7 @@ export default function CreateScreen() {
         mediaTypes: ImagePicker.MediaTypeOptions.Videos,
         allowsEditing: false, // Don't edit to preserve quality
         quality: 1,
-        videoMaxDuration: 300, // 5 minutes max
+        videoMaxDuration: 60, // 60 seconds max
       });
       
       console.log('📹 Video picker result:', result.canceled, result.assets?.length);
@@ -95,9 +137,9 @@ export default function CreateScreen() {
           mimeType: asset.mimeType
         });
         
-        // Check video duration (max 5 minutes)
-        if (asset.duration && asset.duration > 300000) { // 5 minutes in milliseconds
-          Alert.alert('Video Too Long', 'Please select a video shorter than 5 minutes.');
+        // Check video duration (max 60 seconds)
+        if (asset.duration && asset.duration > 60000) { // 60 seconds in milliseconds
+          Alert.alert('Video Too Long', 'Please select a video shorter than 60 seconds.');
           return;
         }
         
@@ -324,6 +366,42 @@ export default function CreateScreen() {
               />
               <Text style={styles.characterCount}>{videoDetails.description.length}/500</Text>
             </View>
+            
+            {/* Thumbnail Upload */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Thumbnail (Optional)</Text>
+              <Text style={styles.inputSubtext}>
+                Upload a custom thumbnail or we'll generate one automatically from your video
+              </Text>
+              
+              {videoThumbnail ? (
+                <View style={styles.thumbnailContainer}>
+                  <Image source={{ uri: videoThumbnail }} style={styles.thumbnailPreview} />
+                  <View style={styles.thumbnailActions}>
+                    <TouchableOpacity 
+                      style={styles.thumbnailButton}
+                      onPress={pickThumbnail}
+                    >
+                      <Text style={styles.thumbnailButtonText}>Change Thumbnail</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.thumbnailButton, styles.removeButton]}
+                      onPress={removeThumbnail}
+                    >
+                      <Text style={[styles.thumbnailButtonText, styles.removeButtonText]}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity 
+                  style={styles.thumbnailUploadButton}
+                  onPress={pickThumbnail}
+                >
+                  <Upload size={24} color="#f29056" />
+                  <Text style={styles.thumbnailUploadText}>Upload Custom Thumbnail</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           {/* Video Tips */}
@@ -422,7 +500,7 @@ export default function CreateScreen() {
           
           <Text style={styles.uploadTitle}>Upload Your Video</Text>
           <Text style={styles.uploadDescription}>
-            Choose a video from your device to showcase your restaurant's food and atmosphere
+            Choose a video from your device (max 60 seconds) to showcase your restaurant's food and atmosphere
           </Text>
           
           <TouchableOpacity 
@@ -438,7 +516,7 @@ export default function CreateScreen() {
         <View style={styles.guidelinesSection}>
           <Text style={styles.guidelinesTitle}>Video Guidelines</Text>
           <View style={styles.guidelinesList}>
-            <Text style={styles.guidelineItem}>• Maximum duration: 5 minutes</Text>
+            <Text style={styles.guidelineItem}>• Maximum duration: 60 seconds</Text>
             <Text style={styles.guidelineItem}>• Maximum file size: 100MB</Text>
             <Text style={styles.guidelineItem}>• Supported formats: MP4, MOV</Text>
             <Text style={styles.guidelineItem}>• Vertical or square format recommended</Text>
@@ -794,5 +872,64 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
     color: 'white',
+  },
+  // Thumbnail styles
+  inputSubtext: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    color: '#94A3B8',
+    marginBottom: 12,
+  },
+  thumbnailContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  thumbnailPreview: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  thumbnailActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  thumbnailButton: {
+    flex: 1,
+    backgroundColor: '#f29056',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  removeButton: {
+    backgroundColor: '#EF4444',
+  },
+  thumbnailButtonText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+    color: 'white',
+  },
+  removeButtonText: {
+    color: 'white',
+  },
+  thumbnailUploadButton: {
+    backgroundColor: 'white',
+    borderWidth: 2,
+    borderColor: '#f29056',
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbnailUploadText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#f29056',
+    marginTop: 8,
   },
 });

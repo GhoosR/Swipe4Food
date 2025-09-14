@@ -9,7 +9,6 @@ import { useLocation } from '@/contexts/LocationContext';
 import { api } from '@/services/supabaseApi';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import NotificationBell from '@/components/NotificationBell';
-import FilterSlider from '@/components/FilterSlider';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -25,7 +24,7 @@ const categories = [
   { name: 'Thai', emoji: '🇹🇭' },
   { name: 'Greek', emoji: '🇬🇷' },
   { name: 'Vegetarian', emoji: '🌱' },
-  { name: 'Vegan', emoji: '🌱' },
+  { name: 'Vegan', emoji: '🌱' }
 ];
 
 export default function HomeScreen() {
@@ -41,6 +40,10 @@ export default function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedRadius, setSelectedRadius] = useState(50);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Temporary filter states for the modal
+  const [tempCategory, setTempCategory] = useState('All');
+  const [tempRadius, setTempRadius] = useState(50);
   const flatListRef = useRef<FlatList>(null);
   const { user } = useAuth();
   const { userLocation } = useLocation();
@@ -126,6 +129,9 @@ export default function HomeScreen() {
   };
 
   const openFilters = () => {
+    // Initialize temporary states with current values
+    setTempCategory(selectedCategory);
+    setTempRadius(selectedRadius);
     setShowFilters(true);
     Animated.spring(slideAnim, {
       toValue: 1,
@@ -147,6 +153,9 @@ export default function HomeScreen() {
   };
 
   const handleApplyFilters = () => {
+    // Apply the temporary filter values
+    setSelectedCategory(tempCategory);
+    setSelectedRadius(tempRadius);
     closeFilters();
     // Trigger video reload with new filters
     setTimeout(() => {
@@ -255,14 +264,14 @@ export default function HomeScreen() {
                         key={category.name}
                         style={[
                           styles.categoryCard,
-                          selectedCategory === category.name && styles.selectedCategoryCard
+                          tempCategory === category.name && styles.selectedCategoryCard
                         ]}
-                        onPress={() => setSelectedCategory(category.name)}
+                        onPress={() => setTempCategory(category.name)}
                         activeOpacity={0.7}
                       >
                         <Text style={[
                           styles.categoryCardText,
-                          selectedCategory === category.name && styles.selectedCategoryCardText
+                          tempCategory === category.name && styles.selectedCategoryCardText
                         ]}>
                           {category.emoji} {category.name}
                         </Text>
@@ -276,19 +285,26 @@ export default function HomeScreen() {
                   <View style={styles.filterSection}>
                     <Text style={styles.filterSectionTitle}>📍 Search Radius</Text>
                     <View style={styles.radiusContainer}>
-                      <Text style={styles.radiusLabel}>Distance: {selectedRadius} km</Text>
-                      <View style={styles.radiusSliderContainer}>
-                        <FilterSlider
-                          value={selectedRadius}
-                          onValueChange={setSelectedRadius}
-                          minimumValue={5}
-                          maximumValue={100}
-                          step={5}
-                        />
-                        <View style={styles.radiusLabels}>
-                          <Text style={styles.radiusLabelText}>5 km</Text>
-                          <Text style={styles.radiusLabelText}>100 km</Text>
-                        </View>
+                      <Text style={styles.radiusLabel}>Distance: {tempRadius} km</Text>
+                      <View style={styles.radiusButtonGrid}>
+                        {[5, 10, 25, 50, 75, 100].map((radius) => (
+                          <TouchableOpacity
+                            key={radius}
+                            style={[
+                              styles.radiusButton,
+                              tempRadius === radius && styles.selectedRadiusButton
+                            ]}
+                            onPress={() => setTempRadius(radius)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={[
+                              styles.radiusButtonText,
+                              tempRadius === radius && styles.selectedRadiusButtonText
+                            ]}>
+                              {radius} km
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
                       </View>
                     </View>
                   </View>
@@ -500,18 +516,33 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  radiusSliderContainer: {
-    paddingHorizontal: 4,
-  },
-  radiusLabels: {
+  radiusButtonGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 12,
   },
-  radiusLabelText: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#94A3B8',
+  radiusButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  selectedRadiusButton: {
+    backgroundColor: '#f29056',
+    borderColor: '#f29056',
+  },
+  radiusButtonText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#4A5568',
+  },
+  selectedRadiusButtonText: {
+    color: 'white',
   },
   locationStatus: {
     flexDirection: 'row',

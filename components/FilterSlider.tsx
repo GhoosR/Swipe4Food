@@ -1,14 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { View, Animated, StyleSheet, Dimensions, Platform } from 'react-native';
-import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedAnimated, { 
   useSharedValue, 
-  useAnimatedGestureHandler, 
   useAnimatedStyle, 
   runOnJS,
   interpolate,
   clamp
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 interface FilterSliderProps {
   value: number;
@@ -41,13 +41,10 @@ export default function FilterSlider({
     translateX.value = ratio * (sliderWidth - THUMB_SIZE);
   }, [value, minimumValue, maximumValue, sliderWidth]);
 
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, context) => {
-      context.startX = translateX.value;
-    },
-    onActive: (event, context) => {
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
       const newX = clamp(
-        context.startX + event.translationX,
+        translateX.value + event.translationX,
         0,
         sliderWidth - THUMB_SIZE
       );
@@ -61,8 +58,7 @@ export default function FilterSlider({
       
       // Update value on JS thread
       runOnJS(onValueChange)(newValue);
-    },
-  });
+    });
 
   const thumbStyle = useAnimatedStyle(() => {
     return {
@@ -138,9 +134,9 @@ export default function FilterSlider({
         <ReanimatedAnimated.View style={[styles.activeTrack, { backgroundColor: thumbColor }, activeTrackStyle]} />
         
         {/* Thumb */}
-        <PanGestureHandler onGestureEvent={gestureHandler}>
+        <GestureDetector gesture={panGesture}>
           <ReanimatedAnimated.View style={[styles.thumb, { backgroundColor: thumbColor }, thumbStyle]} />
-        </PanGestureHandler>
+        </GestureDetector>
       </View>
     </GestureHandlerRootView>
   );

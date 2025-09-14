@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function VerifyScreen() {
   const router = useRouter();
-  const { phone, name, mode } = useLocalSearchParams<{ 
+  const { phone, name, email, mode } = useLocalSearchParams<{ 
     phone: string; 
     name?: string;
     email?: string;
@@ -53,12 +53,6 @@ export default function VerifyScreen() {
 
     try {
       console.log('Verifying OTP for mode:', mode, 'phone:', phone);
-      const { email } = useLocalSearchParams<{ 
-        phone: string; 
-        name?: string;
-        email?: string;
-        mode: 'login' | 'signup';
-      }>();
       
       await verifyOtp(phone as string, otpCode, mode === 'signup' ? name : undefined, mode === 'signup' ? email : undefined);
 

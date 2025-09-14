@@ -12,7 +12,6 @@ import { useLocation } from '@/contexts/LocationContext';
 import { api } from '@/services/supabaseApi';
 import { locationService } from '@/services/locationService';
 import { formatNumber } from '@/utils/formatNumber';
-import NotificationBell from './NotificationBell';
 import Logo from './Logo';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
@@ -190,7 +189,6 @@ export default function VideoReelCard({ video, isActive, onRestaurantPress }: Vi
       {/* Top Header */}
       <View style={[styles.topHeader, { top: insets.top }]} pointerEvents="box-none">
         <View style={styles.headerPlaceholder} />
-        <NotificationBell color="white" />
       </View>
       
       {/* Right Side Actions */}

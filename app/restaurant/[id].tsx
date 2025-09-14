@@ -8,6 +8,7 @@ import {
   Image,
   RefreshControl,
   FlatList,
+  Linking,
   Dimensions,
   Alert,
   Modal,
@@ -26,7 +27,6 @@ import ReviewModal from '@/components/ReviewModal';
 import MenuDisplay from '@/components/MenuDisplay';
 import RestaurantBadges from '@/components/RestaurantBadges';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Linking, Platform } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -472,7 +472,12 @@ export default function RestaurantScreen() {
             {restaurant.website && (
               <View style={styles.contactItem}>
                 <Globe size={16} color="#4A5568" />
-                <Text style={styles.contactText}>{restaurant.website}</Text>
+                <TouchableOpacity onPress={() => {
+                  const url = restaurant.website.startsWith('http') ? restaurant.website : `https://${restaurant.website}`;
+                  Linking.openURL(url).catch(err => console.error('Failed to open URL:', err));
+                }}>
+                  <Text style={[styles.contactText, styles.linkText]}>{restaurant.website}</Text>
+                </TouchableOpacity>
               </View>
             )}
             

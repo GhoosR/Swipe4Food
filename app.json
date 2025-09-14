@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "bolt-expo-nativewind",
-    "slug": "bolt-expo-nativewind",
+    "name": "swipe4food-app",
+    "slug": "swipe4food",
     "projectId": "8708efe0-b139-4401-8f97-4c1bbb247e2c",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -38,6 +38,7 @@
       "expo-router",
       "expo-font",
       "expo-web-browser",
+      "expo-image-picker",
       [
         "expo-notifications",
         {
@@ -51,7 +52,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Swipe4Food to use your location to find nearby restaurants and auto-fill restaurant addresses."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true
