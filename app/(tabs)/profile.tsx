@@ -13,23 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { 
-  User, 
-  Settings, 
-  Globe, 
-  Bell, 
-  LogOut, 
-  Store, 
-  Star, 
-  Calendar, 
-  Heart,
-  Camera,
-  Crown,
-  X,
-  Edit3,
-  MapPin,
-  Award
-} from 'lucide-react-native';
+import { User, Settings, Globe, Bell, LogOut, Store, Star, Calendar, Heart, Camera, Crown, X, CreditCard as Edit3, MapPin, Award } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
