@@ -61,12 +61,13 @@ export default function SubscriptionPlans({ onPlanSelect }: SubscriptionPlansPro
   };
 
   const getFeatures = () => [
-    'Create and manage restaurant profiles',
-    'Upload promotional videos',
-    'Manage bookings and reservations',
-    'Access to analytics dashboard',
-    'Customer review management',
-    'Menu management tools',
+    'Create and manage your restaurant profile',
+    'Upload promotional videos to showcase your food',
+    'Manage customer bookings and reservations',
+    'Access detailed analytics dashboard',
+    'Respond to customer reviews and feedback',
+    'Comprehensive menu management tools',
+    'Priority customer support',
   ];
 
   return (
@@ -80,22 +81,19 @@ export default function SubscriptionPlans({ onPlanSelect }: SubscriptionPlansPro
       </View>
 
       <View style={styles.plansContainer}>
-        {stripeProducts.map((product) => {
-          const isYearly = product.name.includes('Yearly');
+        {stripeProducts.map((product, index) => {
           const isLoading = loading === product.priceId;
+          const isPopular = index === 0; // Make first product popular
           
           const formatPrice = (price: number, interval: string) => {
-            if (interval === 'year') {
-              return `€${price.toFixed(0)}/year`;
-            }
             return `€${price.toFixed(2)}/month`;
           };
           
           return (
-            <View key={product.priceId} style={[styles.planCard, isYearly && styles.popularPlan]}>
-              {isYearly && (
+            <View key={product.priceId} style={[styles.planCard, isPopular && styles.popularPlan]}>
+              {isPopular && (
                 <View style={styles.popularBadge}>
-                  <Text style={styles.popularText}>Most Popular</Text>
+                  <Text style={styles.popularText}>Recommended</Text>
                 </View>
               )}
               
@@ -103,9 +101,6 @@ export default function SubscriptionPlans({ onPlanSelect }: SubscriptionPlansPro
                 <Text style={styles.planName}>{product.name}</Text>
                 <View style={styles.priceContainer}>
                   <Text style={styles.price}>{formatPrice(product.price, product.interval)}</Text>
-                  {product.savings && (
-                    <Text style={styles.savings}>{product.savings}</Text>
-                  )}
                 </View>
                 <Text style={styles.planDescription}>{product.description}</Text>
               </View>
@@ -123,7 +118,7 @@ export default function SubscriptionPlans({ onPlanSelect }: SubscriptionPlansPro
               <TouchableOpacity
                 style={[
                   styles.selectButton,
-                  isYearly && styles.popularButton,
+                  isPopular && styles.popularButton,
                   isLoading && styles.loadingButton
                 ]}
                 onPress={() => handleSelectPlan(product.priceId, product.mode)}
@@ -135,7 +130,7 @@ export default function SubscriptionPlans({ onPlanSelect }: SubscriptionPlansPro
                   <>
                     <Crown size={16} color="white" />
                     <Text style={styles.selectButtonText}>
-                      {isYearly ? 'Choose Yearly Plan' : 'Choose Monthly Plan'}
+                      Start Business Membership
                     </Text>
                   </>
                 )}

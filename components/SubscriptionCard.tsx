@@ -45,9 +45,6 @@ export default function SubscriptionCard({ onUpgrade }: SubscriptionCardProps) {
     const product = stripeProducts.find(p => p.priceId === priceId);
     if (!product) return null;
     
-    if (product.interval === 'year') {
-      return `€${product.price.toFixed(0)}/year`;
-    }
     return `€${product.price.toFixed(2)}/month`;
   };
 

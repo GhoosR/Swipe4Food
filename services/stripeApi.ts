@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { stripeProducts } from '@/src/stripe-config';
 
 export interface CheckoutSessionRequest {
   priceId: string;
@@ -45,14 +46,13 @@ export class StripeAPI {
   }
 
   private validateLiveMode() {
-    // Ensure we're using live price IDs in production
-    const hasTestPriceIds = stripeProducts.some(product => 
-      product.priceId.includes('REPLACE_ME') || 
-      product.priceId.startsWith('price_1Rq') // Test price IDs
+    // Validate that we have proper price IDs configured
+    const hasValidPriceIds = stripeProducts.every(product => 
+      product.priceId && !product.priceId.includes('REPLACE_ME')
     );
     
-    if (hasTestPriceIds) {
-      console.warn('WARNING: Test price IDs detected. Please update src/stripe-config.ts with live price IDs for production.');
+    if (!hasValidPriceIds) {
+      console.warn('WARNING: Invalid price IDs detected. Please check src/stripe-config.ts configuration.');
     }
   }
   async createCheckoutSession(request: CheckoutSessionRequest): Promise<CheckoutSessionResponse> {
